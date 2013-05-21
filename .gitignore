@@ -1,0 +1,11 @@
+*#
+*.iml
+*.ipr
+*.iws
+*.pyc
+*.tm.epoch
+*.vim
+.idea/
+/project/plugins/project
+project/boot
+target/
