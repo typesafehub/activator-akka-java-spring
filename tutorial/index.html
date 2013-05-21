@@ -1,0 +1,257 @@
+<html>
+<head>
+  <title>Akka Java Spring - Activator Template</title>
+</head>
+<body>
+<div>
+  <h2>Introduction</h2>
+
+  <p>This tutorial aims to show you how to inject resources into Akka actors
+    using Spring. You will be guided through the different parts used to
+    integrate Akka with Spring and also create a test wrapper for a service
+    and rewire the service used during testing without any code changes needed
+    to the actor or the application classes.
+  </p>
+
+  <h2> Application Overview</h2>
+
+  <p>The application basically consist of a single actor defined in the
+    <a href="#code/app/sample/CountingActor.java" class="shortcut">
+    app/sample/CountingActor.java</a>
+    file. This actor uses a service defined in the <a href="#code/app/sample/CountingService.java"
+    class="shortcut"> app/sample/CountingService.java</a> file to increment a
+    value. The <code>CountingService</code> is wired into the Actor via Spring.
+  </p>
+
+  <p>To drive the actor, there is a application defined in the 
+    <a href="#code/app/sample/Main.java" class="shortcut">
+    app/sample/Main.java</a> file in the <code>main</code> method, that does the
+    following:
+    <ul>
+      <li>Initializes Spring</li>
+      <li>Creates an actor system</li>
+      <li>Creates a <code>CountingActor</code></li>
+      <li>Sends a couple of messages to the actor so that it uses the
+        <code>CountingService</code></li>
+    </ul>
+  </p>
+</div>
+<div>
+  <h2>Running the Application</h2>
+
+  <p>The result of running the <code>Main</code> application is shown in the
+    <a href="#run" class="shortcut">Run</a> tab. On the left-hand side we can
+    see the console output, which is "Got back 3" for the
+    <a href="#code/app/sample/Main.java" class="shortcut"> app/sample/Main.java
+    </a> application.
+  </p>
+
+  <h2> Running the Test</h2>
+
+  <p>There is also a Junit test for the <code>CountingActor</code> located in
+    the <a href="#code/test/sample/SpringTest.java" class="shortcut">
+    test/sample/SpringTest.java</a> file. It is structured in the same way as
+    the <code>Main</code> application.
+  </p>
+
+  <p>The result of running the <code>SpringTest</code> test is shown in the
+    <a href="#test" class="shortcut">Test</a> tab. On the left-hand side we can
+    see the console output, which is "passed sample.SpringTest.testSpring".
+  </p>
+</div>
+<div>
+  <h2>Exploring the Code: The Akka Extension</h2>
+
+  <p>To be able to use the Spring application context to let Spring create and 
+    wire up our actors, we need to store it away in a place that is easily
+    accessible from within the actor system. This is an ideal use case for what
+    is called an <a href="http://doc.akka.io/docs/akka/2.2.0-RC1/java/extending-akka.html">
+    Akka Extension</a>. An extension can be thought of as a per actor system
+    singleton and the one in this tutorial is defined in the <a
+    href="#code/app/sample/SpringExtension.java" class="shortcut">
+    app/sample/SpringExtension.java</a> file.
+  </p>
+
+  <p>The extension consist of two parts. The <code>SpringExtension</code> class
+    that defines the methods used by Akka to create the extension for an actor
+    system, and the <code>SpringExt</code> class that defines the methods and
+    fields available on the extension.
+  </p>
+
+  <p>On this extension, the <code>SpringExt</code> class, there are only two
+    methods, <code>initialize(ApplicationContext applicationContext)</code>
+    that is used during startup to initialize the extension with the right
+    Spring application context, and <code>props(String actorBeanName)</code>
+    that constructs a <a href="http://doc.akka.io/docs/akka/2.2.0-RC1/java/untyped-actors.html#Props">
+    Props</a> from an actor bean name, that is used to create an actor.
+  </p>
+
+  <p>The <code>Props</code> creation uses the <code>SpringActorProducer</code>
+    that we will talk about next.
+  </p>
+</div>
+<div>
+  <h2>Exploring the Code: The Spring Actor Producer</h2>
+
+  <p>To let Spring create the actor from a bean name we need a way to allow the
+    Akka <a href="http://doc.akka.io/docs/akka/2.2.0-RC1/java/untyped-actors.html#Props">
+    Props</a> to delegate actor creation to Spring. This is done in the <a
+    href="#code/app/sample/SpringActorProducer.java" class="shortcut">
+    app/sample/SpringActorProducer.java</a> file.
+  </p>
+
+  <p>The <code>SpringActorProducer</code> implements the <a
+    href="http://doc.akka.io/japi/akka/2.2.0-RC1/akka/actor/IndirectActorProducer.html">
+    <code>IndirectActorProducer</code></a> interface which is a way to let the
+    actor be <a href="http://doc.akka.io/docs/akka/2.2.0-RC1/java/untyped-actors.html#Creating_Actors_with_Factory_Methods">
+    created via a factory method</a>. This interface has two methods that need
+    to be implemented, <code>actorClass</code> that will return the type of the
+    actor that will be created, and <code>produce</code>, that needs to create
+    a new actor instance every time that it is called.
+  </p>
+</div>
+<div>
+  <h2>Exploring the Code: The Spring Application Configuration</h2>
+
+  <p>To tie everything together and let the Akka actor system know about the
+    Spring application context, we have a Spring configuration defined in the
+    <a href="#code/app/sample/AppConfiguration.java" class="shortcut">
+    app/sample/AppConfiguration.java</a> file.
+  </p>
+
+  <p>The <code>AppConfiguration</code> has a single method <code>actorSystem
+    </code> that is responsible for creating the ActorSystem singleton in this
+    Spring application. The code creates the actor system and then initializes
+    the <code>SpringExtension</code> with the Spring application context needed
+    by the <code>SpringActorProducer</code> to create actor instances from bean
+    names.
+  </p>
+</div>
+<div>
+  <h2>Creating a Test Counting Service</h2>
+
+  <p>Since we want to be able to test our actor thoroughly, let's create a test
+    counting service. In our tutorial it will just wrap the real counting
+    service and do some extra book keeping, but it could just as easily be a
+    complete mock of the service.
+  </p>
+
+  <p>Open the empty <a href="#code/test/sample/TestCountingService.java" class="shortcut">
+    test/sample/TestCountingService.java</a> file, and add the code below.
+    <strong>Remember to save the file afterwards.</strong>
+<pre><code>package sample;
+
+import javax.inject.Named;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * A test counting service that wraps the normal counting service
+ * and keeps track of the number of times that it has been called.
+ */
+@Named("TestCountingService")
+public class TestCountingService extends CountingService {
+
+  private AtomicInteger called = new AtomicInteger(0);
+
+  @Override
+  public int increment(int count) {
+    called.incrementAndGet();
+    return super.increment(count);
+  }
+
+  /**
+   * How many times we have called this service.
+   */
+  public int getNumberOfCalls() {
+      return called.get();
+  }
+}</code></pre>
+  </p>
+</div>
+<div>
+  <h2>A Closer Look at the Test Counting Service</h2>
+
+  <p>Lets take a closer look at the newly created test counting service in the
+    file <a href="#code/test/sample/TestCountingService.java" class="shortcut">
+    test/sample/TestCountingService.java</a>
+  </p>
+
+  <p>The class <code>TestCountingService</code> inherits from <code>
+    CountingService</code> and overrides the method <code>increment</code> on
+    line 16. In that method it keeps track of how many times it has been
+    called, by using an internal counter named <code>called</code> and then it
+    delegates to the real counting service by calling <code>super.increment(count);</code>
+  </p>
+
+  <p>It also has a method named <code>getNumberOfCalls</code> on line 24 that
+    returns the value of the internal counter <code>called</code> that can be
+    used during testing to verify how the service is being used by the actor.
+  </p>
+
+  <p>One important thing to note is the annotation on line 10 <code>
+    @Named("TestCountingService")</code>. This will allow us to wire together
+    the <code>TestCountingService</code> with the <code>CountingActor</code> in
+    the test during the next step.</p>
+</div>
+<div>
+  <h2>Wire up the Test Counting Service</h2>
+
+  <p>Now that you have created a test counting service it is time to start using
+    it in the test.
+  </p>
+
+  <p>Open the <a href="#code/test/sample/SpringTest.java" class="shortcut">
+    test/sample/SpringTest.java</a> file. And between line 24 and 25, right after
+    <code>ctx.scan("sample");</code>, add the two lines below. <strong>Remember
+    to save the file afterwards.</strong>
+<pre><code>// wire up the test service instead of the normal service
+ctx.registerAlias("TestCountingService", "CountingService");</code></pre>
+  </p>
+
+  <p>This alias will make sure that when we look for a bean named <code>
+    CountingService</code> we will instead get the one named <code>
+    TestCountingService</code>. Check that the tests are still green on the
+    <a href="#test" class="shortcut">Test</a> tab.
+  </p>
+
+  <p>We would also like to check that the actor actually called the service the
+    right number of times by using the <code>getNumberOfCalls</code> method.
+    Add the code below to the <a href="#code/test/sample/SpringTest.java" class="shortcut">
+    test/sample/SpringTest.java</a> file. on line 46, just above the comment <code>
+    // shut down the actor system</code>. <strong>Remember to save the file
+    afterwards.</strong>
+<pre><code>// check that it called the TestCountingService the right number of times
+TestCountingService testService = ctx.getBean(TestCountingService.class);
+assertEquals(3, testService.getNumberOfCalls());
+</code></pre>
+  </p>
+
+  <p> Check that the tests are still green on the
+    <a href="#test" class="shortcut">Test</a> tab.
+  </p>
+</div>
+<div>
+  <h2>Conclusions</h2>
+
+  <p>You now have a working sample that uses spring to inject a service or a
+    test service into an actor. Feel free to experiment and change the actor
+    <a href="#code/app/sample/CountingActor.java" class="shortcut">
+    CountingActor.java</a>, service
+    <a href="#code/app/sample/CountingService.java" class="shortcut">
+    CountingService.java</a>, test service
+    <a href="#code/test/sample/TestCountingService.java" class="shortcut">
+    TestCountingService.java</a> and test
+    <a href="#code/test/sample/SpringTest.java" class="shortcut">
+    SpringTest.java</a>.
+  </p>
+
+  <p>The Akka extension <a href="#code/app/sample/SpringExtension.java" class="shortcut">
+    SpringExtension.java</a>, the actor producer <a
+    href="#code/app/sample/SpringActorProducer.java" class="shortcut">
+    SpringActorProducer.java</a> and the application configuration
+    <a href="#code/app/sample/AppConfiguration.java" class="shortcut">
+    AppConfiguration.java</a> can be reused as the basis for your own
+    Spring application.</p>
+</div>
+</body>
+</html>
