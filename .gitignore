@@ -11,3 +11,7 @@
 project/boot
 target/
 /logs
+.cache
+.classpath
+.project
+.settings
