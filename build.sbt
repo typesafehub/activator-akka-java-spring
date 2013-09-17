@@ -5,7 +5,7 @@ version := "0.1"
 scalaVersion := "2.10.2"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.2.0",
+  "com.typesafe.akka" %% "akka-actor" % "2.2.1",
   "org.springframework" % "spring-context" % "3.2.2.RELEASE",
   "javax.inject" % "javax.inject" % "1",
   "junit" % "junit" % "4.11" % "test",
