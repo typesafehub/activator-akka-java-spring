@@ -12,4 +12,8 @@ libraryDependencies ++= Seq(
   "com.novocode" % "junit-interface" % "0.9" % "test->default"
 )
 
+javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
+
+scalacOptions += "-target:jvm-1.7"
+
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-v", "-a")
