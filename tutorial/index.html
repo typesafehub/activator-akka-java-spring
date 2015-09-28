@@ -65,7 +65,7 @@
   <p>To be able to use the Spring application context to let Spring create and 
     wire up our actors, we need to store it away in a place that is easily
     accessible from within the actor system. This is an ideal use case for what
-    is called an <a href="http://doc.akka.io/docs/akka/2.3.4/java/extending-akka.html">
+    is called an <a href="http://doc.akka.io/docs/akka/2.4.0-RC1/java/extending-akka.html">
     Akka Extension</a>. An extension can be thought of as a per actor system
     singleton and the one in this tutorial is defined in the <a
     href="#code/src/main/java/sample/SpringExtension.java" class="shortcut">
@@ -82,7 +82,7 @@
     methods, <code>initialize(ApplicationContext applicationContext)</code>
     that is used during startup to initialize the extension with the right
     Spring application context, and <code>props(String actorBeanName)</code>
-    that constructs a <a href="http://doc.akka.io/docs/akka/2.3.4/java/untyped-actors.html#Props">
+    that constructs a <a href="http://doc.akka.io/docs/akka/2.4.0-RC1/java/untyped-actors.html#Props">
     Props</a> from an actor bean name, that is used to create an actor.
   </p>
 
@@ -94,16 +94,16 @@
   <h2>Exploring the Code: The Spring Actor Producer</h2>
 
   <p>To let Spring create the actor from a bean name we need a way to allow the
-    Akka <a href="http://doc.akka.io/docs/akka/2.3.4/java/untyped-actors.html#Props">
+    Akka <a href="http://doc.akka.io/docs/akka/2.4.0-RC1/java/untyped-actors.html#Props">
     Props</a> to delegate actor creation to Spring. This is done in the <a
     href="#code/src/main/java/sample/SpringActorProducer.java" class="shortcut">
     SpringActorProducer.java</a> file.
   </p>
 
   <p>The <code>SpringActorProducer</code> implements the <a
-    href="http://doc.akka.io/japi/akka/2.3.0/akka/actor/IndirectActorProducer.html">
+    href="http://doc.akka.io/japi/akka/2.4.0-RC1/akka/actor/IndirectActorProducer.html">
     <code>IndirectActorProducer</code></a> interface which is a way to let the
-    actor be <a href="http://doc.akka.io/docs/akka/2.3.4/java/untyped-actors.html#Creating_Actors_with_Factory_Methods">
+    actor be <a href="http://doc.akka.io/docs/akka/2.4.0-RC1/java/untyped-actors.html#Dependency_Injection">
     created via a factory method</a>. This interface has two methods that need
     to be implemented, <code>actorClass</code> that will return the type of the
     actor that will be created, and <code>produce</code>, that needs to create
